@@ -54,7 +54,6 @@ jobs:
 
       - name: Build SFI (device arm64, no signing)
         run: |
-          set -o pipefail
           xcodebuild \
             -project sing-box.xcodeproj \
             -scheme SFI \
@@ -62,4 +61,9 @@ jobs:
             -sdk iphoneos \
             -destination 'generic/platform=iOS' \
             CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
-            build 2>&1 | tail -150
+            build > /tmp/xb.log 2>&1 || true
+          echo "================= 真实 error: 行 ================="
+          grep -nE "error: " /tmp/xb.log | grep -vE "/usr/bin/|swiftc |clang |-D|\.modulevalidation" | head -60
+          echo "================= 日志尾部 ================="
+          tail -40 /tmp/xb.log
+          grep -q "BUILD SUCCEEDED" /tmp/xb.log && echo "BUILD SUCCEEDED ✅" || { echo "BUILD FAILED"; exit 1; }
