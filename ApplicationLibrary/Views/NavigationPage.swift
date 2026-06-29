@@ -93,7 +93,7 @@ public extension NavigationPage {
         Group {
             switch self {
             case .dashboard:
-                DashboardView()
+                ShenxianyunHomeView()
             #if os(macOS)
                 case .groups:
                     GroupListView()
