@@ -54,6 +54,9 @@ jobs:
           cp -R "$FOUND" "$GITHUB_WORKSPACE/Libbox.xcframework"
           ls "$GITHUB_WORKSPACE/Libbox.xcframework"
 
+      - name: Ensure iOS platform installed
+        run: xcodebuild -downloadPlatform iOS || true
+
       - name: List schemes
         run: xcodebuild -project sing-box.xcodeproj -list
 
@@ -64,7 +67,6 @@ jobs:
             -scheme SFI \
             -configuration Debug \
             -sdk iphoneos \
-            -destination 'generic/platform=iOS' \
             CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
             build > /tmp/xb.log 2>&1 || true
           echo "================= 真实 error: 行 ================="
