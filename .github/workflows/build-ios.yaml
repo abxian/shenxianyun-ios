@@ -1,0 +1,54 @@
+name: Build iOS (神仙云)
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    name: Build SFI (unsigned)
+    runs-on: macos-15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Select Xcode 16
+        run: sudo xcode-select -s /Applications/Xcode_16.4.app || sudo xcode-select -s /Applications/Xcode_16.app
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.24"
+
+      - name: Build Libbox.xcframework (from sing-box core)
+        run: |
+          set -e
+          git clone --depth 1 https://github.com/SagerNet/sing-box.git core
+          cd core
+          make lib_install
+          export PATH="$PATH:$(go env GOPATH)/bin"
+          make lib_apple
+          echo "--- 查找产物 Libbox.xcframework ---"
+          FOUND=$(find "$PWD" "$(go env GOPATH)" "$HOME" -maxdepth 4 -name "Libbox.xcframework" -type d 2>/dev/null | head -1)
+          echo "found: $FOUND"
+          test -n "$FOUND"
+          rm -rf "$GITHUB_WORKSPACE/Libbox.xcframework"
+          cp -R "$FOUND" "$GITHUB_WORKSPACE/Libbox.xcframework"
+          ls "$GITHUB_WORKSPACE/Libbox.xcframework"
+
+      - name: List schemes
+        run: xcodebuild -project sing-box.xcodeproj -list
+
+      - name: Build SFI (simulator, no signing)
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -project sing-box.xcodeproj \
+            -scheme SFI \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO \
+            build 2>&1 | tail -120
