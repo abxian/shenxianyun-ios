@@ -146,7 +146,7 @@ public struct ShenxianyunHomeView: View {
     private func loadProfileName() async {
         let id = await SharedPreferences.selectedProfileID.get()
         if let p = try? await ProfileManager.get(id) {
-            await MainActor.run { profileName = p?.name ?? "" }
+            await MainActor.run { profileName = p.name }
         }
     }
 
@@ -154,7 +154,7 @@ public struct ShenxianyunHomeView: View {
         working = true
         defer { working = false }
         let id = await SharedPreferences.selectedProfileID.get()
-        guard let profile = try? await ProfileManager.get(id), let profile, profile.type == .remote else {
+        guard let profile = try? await ProfileManager.get(id), profile.type == .remote else {
             toast = "请先用提取码导入订阅"
             return
         }
