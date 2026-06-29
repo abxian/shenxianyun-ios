@@ -24,6 +24,15 @@ jobs:
         with:
           go-version: "1.24"
 
+      - name: Cache Go build
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/Library/Caches/go-build
+            ~/go/pkg/mod
+          key: ${{ runner.os }}-gobuild-libbox-v1
+          restore-keys: ${{ runner.os }}-gobuild-
+
       - name: Build Libbox.xcframework (from sing-box core)
         run: |
           set -e
@@ -43,14 +52,14 @@ jobs:
       - name: List schemes
         run: xcodebuild -project sing-box.xcodeproj -list
 
-      - name: Build SFI (simulator, no signing)
+      - name: Build SFI (device arm64, no signing)
         run: |
           set -o pipefail
           xcodebuild \
             -project sing-box.xcodeproj \
             -scheme SFI \
             -configuration Debug \
-            -sdk iphonesimulator \
-            -destination 'generic/platform=iOS Simulator' \
-            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO \
-            build 2>&1 | tail -120
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
+            build 2>&1 | tail -150
